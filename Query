@@ -1,0 +1,11 @@
+Query to put in wikidata to get same results:
+
+SELECT ?philosopher ?philosopherLabel ?birthDate ?deathDate ?schoolLabel ?nationalityLabel WHERE {
+  ?philosopher wdt:P106 wd:Q4964182.  #must be a philosopher
+  OPTIONAL { ?philosopher wdt:P569 ?birthDate. }
+  OPTIONAL { ?philosopher wdt:P570 ?deathDate. }
+  ?philosopher wdt:P135 ?school.     #must have a study in the entry
+  OPTIONAL { ?philosopher wdt:P27 ?nationality. }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+LIMIT 2000 #Prevents too many results
