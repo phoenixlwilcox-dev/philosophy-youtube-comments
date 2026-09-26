@@ -1,0 +1,58 @@
+- This code requires an API to be made, but once made can use video ids (after the "v=" in the URL) and put them into a csv file 
+- I used data from 0-7 years (Generaly one video for every 1-2 years for a total of 3 videos) for different topics in philosophy
+  PHILOSOPHY TOPICS:
+  - Free Will vs. Determinism
+  - Existentialism
+  - Ethics and Morals
+  - Stoicism
+  - Consciousness
+
+CODE:
+
+from googleapiclient.discovery import build
+import pandas as pd
+import time
+
+API_KEY = "api here"   
+youtube = build("youtube", "v3", developerKey=API_KEY)
+
+video_ids = ["aTPHDH0Vt7w", "j5y6Igw4lXY", "rohgVwQ57uM", "2CKBo0hJ0ts", "ZDPtXEXBEiI", "VYyxc1mmnrI", "rEzs5edrxdU", "DLCUn6h7qRo", "V-j1uKrN-aU", "WVlpXUqmRQQ", "ggkd_uyDqz8", "smpHE7AiGAo", "av1Fj2Ar3h0", "CdjHRA7fV10", "ot4z1UrPvZY"]
+
+all_comments = []
+
+for vid in video_ids:
+    next_page = None
+    while True:
+        try:
+            request = youtube.commentThreads().list(
+                part="snippet",
+                videoId=vid,
+                maxResults=100,
+                pageToken=next_page,
+                textFormat="plainText"
+            )
+            response = request.execute()
+        except Exception as e:
+            print(f"Skipping {vid}: {e}")
+            break
+
+        for item in response["items"]:
+            c = item["snippet"]["topLevelComment"]["snippet"]
+            all_comments.append({
+                "comment_id": item["snippet"]["topLevelComment"]["id"],
+                "video_id": vid,
+                "author": c["authorDisplayName"],
+                "text": c["textDisplay"],
+                "like_count": c["likeCount"],
+                "published_at": c["publishedAt"],
+                "reply_count": item["snippet"]["totalReplyCount"]
+            })
+
+        next_page = response.get("nextPageToken")
+        if not next_page:
+            break
+        time.sleep(0.5)
+
+df = pd.DataFrame(all_comments)
+df.to_csv("youtube_philosophy_comments.csv", index=False)
+print(f"Saved {len(df)} comments")
