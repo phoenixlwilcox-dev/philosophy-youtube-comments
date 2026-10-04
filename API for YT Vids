@@ -1,0 +1,25 @@
+from googleapiclient.discovery import build
+import pandas as pd
+
+API_KEY = "MY API KEY HERE" 
+youtube = build("youtube", "v3", developerKey=API_KEY)
+
+video_ids = ["aTPHDH0Vt7w", "j5y6Igw4lXY", "rohgVwQ57uM", "2CKBo0hJ0ts", "ZDPtXEXBEiI", "VYyxc1mmnrI", "rEzs5edrxdU", "DLCUn6h7qRo", "V-j1uKrN-aU", "WVlpXUqmRQQ", "ggkd_uyDqz8", "smpHE7AiGAo", "av1Fj2Ar3h0", "CdjHRA7fV10", "ot4z1UrPvZY"]
+
+response = youtube.videos().list(
+    part="snippet,statistics",
+    id=",".join(video_ids)
+).execute()
+
+rows = []
+for item in response["items"]:
+    rows.append({
+        "video_id": item["id"],
+        "channel": item["snippet"]["channelTitle"],
+        "title": item["snippet"]["title"],
+        "published_at": item["snippet"]["publishedAt"],
+        "view_count": int(item["statistics"].get("viewCount", 0)),
+    })
+
+videos_df = pd.DataFrame(rows)
+videos_df.to_csv("youtube_videos.csv", index=False)
